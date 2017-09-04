@@ -15,23 +15,23 @@
 #define COAGULAR 6
 
 //DEFINICIÓN DE SALIDAS DE LA TARJETA QUE GESTIONA LOS PINES DE LA MÁQUINA
-#define MEDIR_RETORNO 53
-#define SD_LAPIZ 51
-#define ACTIVAR_RETORNO 49
-#define ACTIVAR_CORTE 47
-#define ACTIVAR_COAG 45
-#define ALARMA_RETORNO 43 //SOLO SI SE HACE UNA ALARMA VISUAL QUE OCUPE UN PIN FISICO
-#define ALARMA_CORTE_FAIL 41
-#define SONIDO_CORTE 39
-#define SONIDO_COAG 37
-#define MEDIR_Z 13
+#define MEDIR_RETORNO 45
+#define SD_LAPIZ 37
+#define ACTIVAR_RETORNO 51
+#define ACTIVAR_CORTE 41
+#define ACTIVAR_COAG 43
+#define ALARMA_RETORNO 3 //SOLO SI SE HACE UNA ALARMA VISUAL QUE OCUPE UN PIN FISICO
+#define ALARMA_CORTE_FAIL 2
+#define SONIDO_CORTE 4
+#define SONIDO_COAG 5
+#define MEDIR_Z 39
 
 
 //DEFINO LA VARIABLE ESTADO PARA CAPTURAR EL ESTADO VIA I2C
 int ESTADO = 1;
 
 void setup() {
-
+  
   //CONFIGURACIÓN DE RECEPCIÓN DE DATOS VIA I2C
   Wire.begin(8);                // join i2c bus with address #8
   Wire.onReceive(receiveEvent); // register event
@@ -39,11 +39,13 @@ void setup() {
 
   //SALIDA DE LA MAQUINA DE ESTADOS
   SET_OUTPUTS_STATES_MACHINE();
+  delay(200);
 
 }
 
 void loop() {
-
+  
+  //Wire.onReceive(receiveEvent); // register event
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO Y ACTUALIZA LAS SALIDAS
   delay(500);
 
@@ -58,95 +60,95 @@ void receiveEvent(int howMany) {
 
 //DEFINICIÓN DE QUE HACE CADA ESTADO
 void ESTADO_INICIO(){
-   digitalWrite(MEDIR_RETORNO, 0);
-   digitalWrite(SD_LAPIZ, 0);
-   digitalWrite(MEDIR_Z, 0);
-   digitalWrite(ACTIVAR_RETORNO, 0);
-   digitalWrite(ACTIVAR_CORTE, 0);
-   digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 0);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
-   digitalWrite(SONIDO_CORTE, 0);
-   digitalWrite(SONIDO_COAG, 0);
+   digitalWrite(MEDIR_RETORNO, 1);
+   digitalWrite(SD_LAPIZ, 1);
+   digitalWrite(MEDIR_Z, 1);
+   digitalWrite(ACTIVAR_RETORNO, 1);
+   digitalWrite(ACTIVAR_CORTE, 1);
+   digitalWrite(ACTIVAR_COAG, 1);
+   digitalWrite(ALARMA_RETORNO, 1);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
+   digitalWrite(SONIDO_CORTE, 1);
+   digitalWrite(SONIDO_COAG, 1);
 
 }
 
 void ESTADO_MONITOREAR_PLACA(){
-   digitalWrite(MEDIR_RETORNO, 1);
-   digitalWrite(SD_LAPIZ, 1);
-   digitalWrite(MEDIR_Z, 0);
-   digitalWrite(ACTIVAR_RETORNO, 0);
-   digitalWrite(ACTIVAR_CORTE, 0);
-   digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 1);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
-   digitalWrite(SONIDO_CORTE, 0);
-   digitalWrite(SONIDO_COAG, 0);
-}
-
-void ESTADO_CORTE_FAIL(){
-   digitalWrite(MEDIR_RETORNO, 1);
-   digitalWrite(SD_LAPIZ, 1);
-   digitalWrite(MEDIR_Z, 0);
-   digitalWrite(ACTIVAR_RETORNO, 0);
-   digitalWrite(ACTIVAR_CORTE, 0);
-   digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 1);
-   digitalWrite(ALARMA_CORTE_FAIL, 1);
-   digitalWrite(SONIDO_CORTE, 0);
-   digitalWrite(SONIDO_COAG, 0);
-}
-
-void ESTADO_MONITOREAR_Z(){
    digitalWrite(MEDIR_RETORNO, 0);
    digitalWrite(SD_LAPIZ, 0);
    digitalWrite(MEDIR_Z, 1);
-   digitalWrite(ACTIVAR_RETORNO, 0);
-   digitalWrite(ACTIVAR_CORTE, 0);
-   digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 0);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
-   digitalWrite(SONIDO_CORTE, 0);
-   digitalWrite(SONIDO_COAG, 0);
-}
-
-void ESTADO_COAGULAR(){
-   digitalWrite(MEDIR_RETORNO, 0);
-   digitalWrite(SD_LAPIZ, 0);
-   digitalWrite(MEDIR_Z, 0);
    digitalWrite(ACTIVAR_RETORNO, 1);
-   digitalWrite(ACTIVAR_CORTE, 0);
+   digitalWrite(ACTIVAR_CORTE, 1);
    digitalWrite(ACTIVAR_COAG, 1);
    digitalWrite(ALARMA_RETORNO, 0);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
-   digitalWrite(SONIDO_CORTE, 0);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
+   digitalWrite(SONIDO_CORTE, 1);
    digitalWrite(SONIDO_COAG, 1);
 }
 
-void ESTADO_CORTAR(){
+void ESTADO_CORTE_FAIL(){
    digitalWrite(MEDIR_RETORNO, 0);
    digitalWrite(SD_LAPIZ, 0);
+   digitalWrite(MEDIR_Z, 1);
+   digitalWrite(ACTIVAR_RETORNO, 1);
+   digitalWrite(ACTIVAR_CORTE, 1);
+   digitalWrite(ACTIVAR_COAG, 1);
+   digitalWrite(ALARMA_RETORNO, 0);
+   digitalWrite(ALARMA_CORTE_FAIL, 0);
+   digitalWrite(SONIDO_CORTE, 1);
+   digitalWrite(SONIDO_COAG, 1);
+}
+
+void ESTADO_MONITOREAR_Z(){
+   digitalWrite(MEDIR_RETORNO, 1);
+   digitalWrite(SD_LAPIZ, 1);
    digitalWrite(MEDIR_Z, 0);
    digitalWrite(ACTIVAR_RETORNO, 1);
    digitalWrite(ACTIVAR_CORTE, 1);
+   digitalWrite(ACTIVAR_COAG, 1);
+   digitalWrite(ALARMA_RETORNO, 1);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
+   digitalWrite(SONIDO_CORTE, 1);
+   digitalWrite(SONIDO_COAG, 1);
+}
+
+void ESTADO_COAGULAR(){
+   digitalWrite(MEDIR_RETORNO, 1);
+   digitalWrite(SD_LAPIZ, 1);
+   digitalWrite(MEDIR_Z, 1);
+   digitalWrite(ACTIVAR_RETORNO, 0);
+   digitalWrite(ACTIVAR_CORTE, 1);
    digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 0);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
+   digitalWrite(ALARMA_RETORNO, 1);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
    digitalWrite(SONIDO_CORTE, 1);
    digitalWrite(SONIDO_COAG, 0);
 }
 
-void ESTADO_ELECCION_MODO(){
-   digitalWrite(MEDIR_RETORNO, 0);
+void ESTADO_CORTAR(){
+   digitalWrite(MEDIR_RETORNO, 1);
    digitalWrite(SD_LAPIZ, 1);
-   digitalWrite(MEDIR_Z, 0);
+   digitalWrite(MEDIR_Z, 1);
    digitalWrite(ACTIVAR_RETORNO, 0);
    digitalWrite(ACTIVAR_CORTE, 0);
-   digitalWrite(ACTIVAR_COAG, 0);
-   digitalWrite(ALARMA_RETORNO, 0);
-   digitalWrite(ALARMA_CORTE_FAIL, 0);
+   digitalWrite(ACTIVAR_COAG, 1);
+   digitalWrite(ALARMA_RETORNO, 1);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
    digitalWrite(SONIDO_CORTE, 0);
-   digitalWrite(SONIDO_COAG, 0);
+   digitalWrite(SONIDO_COAG, 1);
+}
+
+void ESTADO_ELECCION_MODO(){
+   digitalWrite(MEDIR_RETORNO, 1);
+   digitalWrite(SD_LAPIZ, 0);
+   digitalWrite(MEDIR_Z, 1);
+   digitalWrite(ACTIVAR_RETORNO, 1);
+   digitalWrite(ACTIVAR_CORTE, 1);
+   digitalWrite(ACTIVAR_COAG, 1);
+   digitalWrite(ALARMA_RETORNO, 1);
+   digitalWrite(ALARMA_CORTE_FAIL, 1);
+   digitalWrite(SONIDO_CORTE, 1);
+   digitalWrite(SONIDO_COAG, 1);
 }
 
 
