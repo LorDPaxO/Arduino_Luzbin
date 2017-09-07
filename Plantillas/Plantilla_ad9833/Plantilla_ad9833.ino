@@ -14,15 +14,17 @@ void setup() {
   pinMode(slaveSelectPin, OUTPUT);
   // initialize SPI:
   SPI.begin();
-  SET_AD9833();
   delay(10);
+  for (int hola = 1; hola < 10; hola++) {
+    SET_AD9833();
+    delay(20);
+    }
   Serial.begin(9600);
 }
 
 void loop() {
-
   
-
+  
 }
 
 
@@ -34,17 +36,26 @@ void SET_AD9833() {
   
   digitalWrite(slaveSelectPin, LOW);
   //  send in the address and value via SPI:
-  SPI.transfer16(0x21F0);
-  SPI.transfer16(0x50C7);
-  SPI.transfer16(0x4FF0);
-  SPI.transfer16(0xCFF0);
-  SPI.transfer16(0x2000);
+
+  SPI.transfer16(0x2128);
+  //SPI.transfer16(0x2100);  ORIGINAL 
+  SPI.transfer16(0x69F1); //01 + dato de frecuencia que son 14 bits
+  //SPI.transfer16(0x50C7);
+  SPI.transfer16(0x4000);
+  SPI.transfer16(0xC000);
+  SPI.transfer16(0x2028);
+  
+  //SPI.transfer16(0x2002); ORIGINAL
 
   // take the SS pin high to de-select the chip:
   digitalWrite(slaveSelectPin, HIGH);
   SPI.endTransaction();
 }
 
+//0010 0000 0010 0000
+//0010 0000 0000 0010
+
+//00010 0001 0010 0010
 /*
 void setWave() {
   long freq_data = frequency * pow(2, 28) / REF_FREQ;
