@@ -37,7 +37,7 @@ void SET_AD9833() {
   digitalWrite(slaveSelectPin, LOW);
   //  send in the address and value via SPI:
 
-  SPI.transfer16(0x2128);
+  SPI.transfer16(0x2128);//2128
   //SPI.transfer16(0x2100);  ORIGINAL 
   SPI.transfer16(0x69F1); //01 + dato de frecuencia que son 14 bits
   //SPI.transfer16(0x50C7);

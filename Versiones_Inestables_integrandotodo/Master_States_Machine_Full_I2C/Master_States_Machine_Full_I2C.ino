@@ -1,7 +1,9 @@
-//PROGRAMA DE MAQUINA DE ESTADOS PARA EL MASTER DEL I2C
-
+//PROGRAM6A DE MAQUINA DE ESTADOS PARA EL MASTER DEL I2C
+#include <AD5933.h>
 #include <Wire.h>
 byte estado_I2C=0;
+
+AD5933 Bio(9600);
 
 //DEFINICION DE ESTADOS
 #define INICIO 0
@@ -20,12 +22,12 @@ byte estado_I2C=0;
 //#define Z_ON 2
 
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
-#define PLACA_RETORNO 7
+//#define PLACA_RETORNO 7
 #define COR_ON 6
 #define COAG_ON 5
 #define CORTE_C 4
 #define COAG_C 3
-#define Z_ON 2
+//#define Z_ON 2
 
 //DEFINICIÓN DE SALIDAS
 //Como no voy a usar ninguna salida de este micro todo van a ser señales "buffers"
@@ -66,8 +68,12 @@ void setup() {
 }
 
 void loop() {
-
-
+  /*
+  READ_IMPENDACE();
+  READ_DISPLAY();
+  HACER_CALCULO_DE_POTENCIA();
+  GRADUAR_POTENCIA();
+  */
   READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
   
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO
@@ -88,31 +94,40 @@ void READ_INPUTS_STATES_MACHINE(){
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
 
   
-  PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
-
-  //Acá va el código para capturar el estado de la placa 
-  //Código de andres
+  
+  PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
+  Z_ON_REQUEST();
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
   CORTE_C_S = digitalRead(CORTE_C);
+  //CORTE_C_REQUEST();  PENDIENTE POR QUE ZURDO LO HAGA
+
   COAG_C_S = digitalRead(COAG_C);
-  Z_ON_S = digitalRead(Z_ON);
+  //Z_ON_S = digitalRead(Z_ON);
+  //PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
+}
+
+
+
+void CORTE_C_REQUEST(){
+  //EMPIEZA COMUNICACIÓN I2C 
+  //Y ACTUALIZA EL VALOR DE COR_C_S
 }
 
 
 //FUNCIONES PARA SETEAR ENTRADAS Y SALIDAS DE LA MAQUINA DE ESTADOS
 void DEFINE_INPUTS_STATES_MACHINE(){
 
-//pinMode(PLACA_RETORNO, INPUT);
+  //pinMode(PLACA_RETORNO, INPUT);
 //pinMode(Z_ON, INPUT);
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardwar
   
-  pinMode(PLACA_RETORNO, INPUT);
+  //pinMode(PLACA_RETORNO, INPUT);  ya no es entrada si no señal
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
   pinMode(CORTE_C, INPUT);
   pinMode(COAG_C, INPUT);
-  pinMode(Z_ON, INPUT);
+  //pinMode(Z_ON, INPUT);
 
 }
 
@@ -126,6 +141,26 @@ void SEND_STATE_I2C() {
   Wire.endTransmission();    // stop transmitting
   delay(10);
 }
+
+void PLACA_RETORNO_REQUEST(){
+
+    int Valor_Impedancia = Bio.impedance();
+    if(Valor_Impedancia<480){
+        PLACA_RETORNO_S = true;
+      }else{
+        PLACA_RETORNO_S = false;  
+      }
+  }
+
+void Z_ON_REQUEST(){
+
+    int Valor_Z = Bio.impedance();
+    if(Valor_Z<2500){
+        Z_ON_S = true;
+      }else{
+        Z_ON_S = false;  
+      }
+  }
 
 void TURN_ON_STATES_MACHINE(){
 
