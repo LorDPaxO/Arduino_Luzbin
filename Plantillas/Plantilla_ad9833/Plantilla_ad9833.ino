@@ -1,5 +1,6 @@
 
 #include <SPI.h>
+#define PWM_pin 6
 
 const int slaveSelectPin_DDS1 = 10;       // Comando para escribir en el AD5933 
 const int slaveSelectPin_DDS2 = 9;       // Comando para escribir en el AD5933 
@@ -12,6 +13,7 @@ const int slaveSelectPin_DDS2 = 9;       // Comando para escribir en el AD5933
 
 #define this_pin 5
 void setup() {
+  TCCR0B = _BV(CS01);
   pinMode(slaveSelectPin_DDS1,OUTPUT);
   pinMode(slaveSelectPin_DDS2, OUTPUT);
   // initialize SPI:
@@ -28,7 +30,7 @@ void setup() {
 }
 
 void loop() {
-  
+  analogWrite(PWM_pin,200);
 }
 
 
