@@ -39,7 +39,6 @@ void setup() {
 
   //SALIDA DE LA MAQUINA DE ESTADOS
   SET_OUTPUTS_STATES_MACHINE();
-  delay(200);
 
 }
 
@@ -47,7 +46,6 @@ void loop() {
   
   //Wire.onReceive(receiveEvent); // register event
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO Y ACTUALIZA LAS SALIDAS
-  delay(500);
 
 }
 

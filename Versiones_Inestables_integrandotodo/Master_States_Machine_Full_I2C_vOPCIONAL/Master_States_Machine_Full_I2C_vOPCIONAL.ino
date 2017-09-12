@@ -70,12 +70,10 @@ void loop() {
 
 
   //READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
-  
+  READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADO
+
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO
 
-  delay(500);
-  READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
-  
   SEND_STATE_I2C(); //ENVIA EL DATO DEL ESTADO AL MICROCONTROLADOR QUE GESTIONA LAS SALIDAS
 
   
@@ -99,17 +97,11 @@ void READ_INPUTS_STATES_MACHINE(){
   //Acá va el código para capturar el estado de la placa 
   //Código de andres
   PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
-  delay(500);
   Z_ON_REQUEST();
-  delay(500);
   COR_ON_S = digitalRead(COR_ON);
-  delay(500);
   COAG_ON_S = digitalRead(COAG_ON);
-  delay(500);
   CORTE_C_S = digitalRead(CORTE_C);
-  delay(500);
   COAG_C_S = digitalRead(COAG_C);
-  delay(500);
   //Z_ON_S = digitalRead(Z_ON);
 }
 
@@ -198,7 +190,7 @@ void TURN_ON_STATES_MACHINE(){
           if(Z_ON_S==1){
               ESTADO = ELECCION_MODO;
           } else {
-              ESTADO = MONITOREAR_PLACA;
+              //ESTADO = MONITOREAR_PLACA;
           }
         break;
         
