@@ -25,8 +25,8 @@ AD5933 Bio(9600);
 //#define PLACA_RETORNO 7
 #define COR_ON 6
 #define COAG_ON 5
-#define CORTE_C 4
-#define COAG_C 3
+//#define CORTE_C 4
+//#define COAG_C 3
 //#define Z_ON 2
 
 //DEFINICIÓN DE SALIDAS
@@ -46,6 +46,12 @@ boolean MEDIR_Z_B = 0;
 
 //Creo los buffer de las entradas para almacenar el estado de todas las entradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
+
+
+int CORTE_C = 0x02;
+byte COAG_C = 0x01;
+
+
 boolean PLACA_RETORNO_S = 0;
 boolean COR_ON_S = 0;
 boolean COAG_ON_S = 0;
@@ -99,19 +105,46 @@ void READ_INPUTS_STATES_MACHINE(){
   Z_ON_REQUEST();
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
-  CORTE_C_S = digitalRead(CORTE_C);
+  SENS_CORRIENTE();
+  CORTE_C_REQUEST();
+  COAG_C_REQUEST();
+  
+  //CORTE_C_S = digitalRead(CORTE_C);
   //CORTE_C_REQUEST();  PENDIENTE POR QUE ZURDO LO HAGA
-
-  COAG_C_S = digitalRead(COAG_C);
+  //COAG_C_S = digitalRead(COAG_C);
   //Z_ON_S = digitalRead(Z_ON);
   //PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
 }
 
+void SENS_CORRIENTE(){
+  Wire.requestFrom(7, 1);    // solicita 1 byte del dispositivo esclavo # 7
+  
+  while (Wire.available()) { // esclavo puede enviar menos de lo solicitado
+    byte sensadoCorriente = Wire.read(); // recibe un byte como carácter
+    Serial.println(sensadoCorriente, BIN);        // imprimir el carácter
+    CORTE_C = (CORTE_C & sensadoCorriente) >> 1;
+    COAG_C = (COAG_C & sensadoCorriente);
+  }  
+}
+
+void COAG_C_REQUEST(){
+  if(COAG_C == 1){
+    COAG_C_S = true;
+  }
+  else{
+    COAG_C_S = false;  
+  }  
+  
+}
 
 
 void CORTE_C_REQUEST(){
-  //EMPIEZA COMUNICACIÓN I2C 
-  //Y ACTUALIZA EL VALOR DE COR_C_S
+  if(CORTE_C == 1){
+    CORTE_C_S = true;
+  }
+  else{
+    CORTE_C_S = false;  
+  }
 }
 
 
@@ -125,8 +158,8 @@ void DEFINE_INPUTS_STATES_MACHINE(){
   //pinMode(PLACA_RETORNO, INPUT);  ya no es entrada si no señal
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
-  pinMode(CORTE_C, INPUT);
-  pinMode(COAG_C, INPUT);
+  //pinMode(CORTE_C, INPUT);
+  //pinMode(COAG_C, INPUT);
   //pinMode(Z_ON, INPUT);
 
 }
@@ -145,11 +178,14 @@ void SEND_STATE_I2C() {
 void PLACA_RETORNO_REQUEST(){
 
     int Valor_Impedancia = Bio.impedance();
+    Serial.println(Valor_Impedancia);
     if(Valor_Impedancia<480){
         PLACA_RETORNO_S = true;
       }else{
         PLACA_RETORNO_S = false;  
       }
+      Serial.println("Placa de Retorno");
+      Serial.println(PLACA_RETORNO_S);
   }
 
 void Z_ON_REQUEST(){

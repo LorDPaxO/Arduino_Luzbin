@@ -30,7 +30,7 @@ void setup() {
 }
 
 void loop() {
-  analogWrite(PWM_pin,200);
+  analogWrite(PWM_pin,128);
 }
 
 

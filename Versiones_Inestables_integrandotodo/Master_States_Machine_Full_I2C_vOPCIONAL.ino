@@ -1,7 +1,8 @@
 //PROGRAMA DE MAQUINA DE ESTADOS PARA EL MASTER DEL I2C
-
+#include <AD5933.h>
 #include <Wire.h>
 byte estado_I2C=0;
+AD5933 Bio(9600);
 
 //DEFINICION DE ESTADOS
 #define INICIO 0
@@ -20,12 +21,12 @@ byte estado_I2C=0;
 //#define Z_ON 2
 
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
-#define PLACA_RETORNO 7
+//#define PLACA_RETORNO 7
 #define COR_ON 8
 #define COAG_ON 9
 #define CORTE_C 4
 #define COAG_C 3
-#define Z_ON 2
+//#define Z_ON 2
 
 //DEFINICIÓN DE SALIDAS
 //Como no voy a usar ninguna salida de este micro todo van a ser señales "buffers"
@@ -68,11 +69,16 @@ void setup() {
 void loop() {
 
 
-  READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
+  //READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
   
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO
+
+  delay(500);
+  READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
   
   SEND_STATE_I2C(); //ENVIA EL DATO DEL ESTADO AL MICROCONTROLADOR QUE GESTIONA LAS SALIDAS
+
+  
 
 }
 
@@ -88,15 +94,23 @@ void READ_INPUTS_STATES_MACHINE(){
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
 
   
-  PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
+  //PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
 
   //Acá va el código para capturar el estado de la placa 
   //Código de andres
+  PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
+  delay(500);
+  Z_ON_REQUEST();
+  delay(500);
   COR_ON_S = digitalRead(COR_ON);
+  delay(500);
   COAG_ON_S = digitalRead(COAG_ON);
+  delay(500);
   CORTE_C_S = digitalRead(CORTE_C);
+  delay(500);
   COAG_C_S = digitalRead(COAG_C);
-  Z_ON_S = digitalRead(Z_ON);
+  delay(500);
+  //Z_ON_S = digitalRead(Z_ON);
 }
 
 
@@ -107,12 +121,12 @@ void DEFINE_INPUTS_STATES_MACHINE(){
 //pinMode(Z_ON, INPUT);
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardwar
   
-  pinMode(PLACA_RETORNO, INPUT);
+  //pinMode(PLACA_RETORNO, INPUT);
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
   pinMode(CORTE_C, INPUT);
   pinMode(COAG_C, INPUT);
-  pinMode(Z_ON, INPUT);
+  //pinMode(Z_ON, INPUT);
 
 }
 
@@ -126,6 +140,31 @@ void SEND_STATE_I2C() {
   Wire.endTransmission();    // stop transmitting
   delay(10);
 }
+
+
+void PLACA_RETORNO_REQUEST(){
+
+    int Valor_Impedancia = Bio.impedance();
+    Serial.println(Valor_Impedancia);
+    if(Valor_Impedancia<480){
+        PLACA_RETORNO_S = true;
+      }else{
+        PLACA_RETORNO_S = false;  
+      }
+      Serial.println("Placa de Retorno");
+      Serial.println(PLACA_RETORNO_S);
+  }
+
+void Z_ON_REQUEST(){
+
+    int Valor_Z = Bio.impedance();
+    if(Valor_Z<2500){
+        Z_ON_S = true;
+      }else{
+        Z_ON_S = false;  
+      }
+  }
+
 
 void TURN_ON_STATES_MACHINE(){
 
