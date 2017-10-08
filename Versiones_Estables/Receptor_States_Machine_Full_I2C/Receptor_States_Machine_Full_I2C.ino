@@ -4,7 +4,6 @@
 
 //FALTA BORRAR EL DEBUGGER QUE TENGO CON COMUNICACIÓN RS232
 
-
 //DEFINICION DE ESTADOS
 #define INICIO 0
 #define MONITOREAR_PLACA 1
@@ -35,7 +34,7 @@ void setup() {
   //CONFIGURACIÓN DE RECEPCIÓN DE DATOS VIA I2C
   Wire.begin(8);                // join i2c bus with address #8
   Wire.onReceive(receiveEvent); // register event
-  Serial.begin(9600);           // start serial for output
+  //Serial.begin(9600);           // start serial for output
 
   //SALIDA DE LA MAQUINA DE ESTADOS
   SET_OUTPUTS_STATES_MACHINE();
@@ -174,22 +173,22 @@ void TURN_ON_STATES_MACHINE(){
   switch (ESTADO) {
       case 0:
         ESTADO_INICIO();
-        Serial.println("Estado 0"); 
+        //Serial.println("Estado 0"); 
         break;
 
       case 1:
         ESTADO_MONITOREAR_PLACA();
-        Serial.println("Estado 1");
+        //Serial.println("Estado 1");
         break;
 
       case 2:
         ESTADO_CORTE_FAIL();
-        Serial.println("Estado 2");
+        //Serial.println("Estado 2");
         break;
 
       case 3:
         ESTADO_MONITOREAR_Z();
-        Serial.println("Estado 3");
+        //Serial.println("Estado 3");
         break;
       case 4:
         ESTADO_ELECCION_MODO(); // No olvidar agregar un timer en caso de que nunca llegue señal de corte desde el lapiz
