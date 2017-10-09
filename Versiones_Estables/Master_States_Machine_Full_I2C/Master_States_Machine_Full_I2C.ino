@@ -20,29 +20,32 @@ byte estado_I2C=0;
 //#define Z_ON 2
 
 //Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
-#define PLACA_RETORNO 7
+//Voy a desahibilitar lo que tengo como signal en la hoja de la máquina de estados
+//#define PLACA_RETORNO 7
 #define COR_ON 8
 #define COAG_ON 9
 #define CORTE_C 4
 #define COAG_C 3
-#define Z_ON 2
+//#define Z_ON 2
 
 //DEFINICIÓN DE SALIDAS
 //Como no voy a usar ninguna salida de este micro todo van a ser señales "buffers"
+//Puedo quitar estos buffers
 
+//boolean MEDIR_RETORNO_B = 0;
+//boolean SD_LAPIZ_B = 0;
+//boolean ACTIVAR_RETORNO_B = 0;
+//boolean ACTIVAR_CORTE_B = 0;
+//boolean ACTIVAR_COAG_B = 0;
+//boolean ALARMA_RETORNO_B = 0;
+//boolean ALARMA_CORTE_FAIL_B = 0;
+//boolean SONIDO_CORTE_B = 0;
+//boolean SONIDO_COAG_B = 0;
+//boolean MEDIR_Z_B = 0;
 
-boolean MEDIR_RETORNO_B = 0;
-boolean SD_LAPIZ_B = 0;
-boolean ACTIVAR_RETORNO_B = 0;
-boolean ACTIVAR_CORTE_B = 0;
-boolean ACTIVAR_COAG_B = 0;
-boolean ALARMA_RETORNO_B = 0;
-boolean ALARMA_CORTE_FAIL_B = 0;
-boolean SONIDO_CORTE_B = 0;
-boolean SONIDO_COAG_B = 0;
-boolean MEDIR_Z_B = 0;
 
 //Creo los buffer de las entradas para almacenar el estado de todas las entradas y trabajar de la misma forma que un plc
+//Estos si no se pueden comentar
 int ESTADO = 0;
 boolean PLACA_RETORNO_S = 0;
 boolean COR_ON_S = 0;

@@ -1,4 +1,14 @@
-//PROGRAMA DE MAQUINA DE ESTADOS PARA EL MASTER DEL I2C
+/////////////////////////////////////////////////////////////////////
+/////////////*******************************************/////////////
+/////////////***********#1 BIOIMPEDENCEMETER************/////////////
+//ACÁ SE LEEN LAS ENTRADAS DE LA MÁQUINA DE ESTADOS, SE EJECUA LA LÓGICA Y SE ENVIAN LAS ACCIONES
+//AL RESTO DE PLACA, ADICIONAL CAPTURA Y ACTUALIZA LOS DATOS DE LA PANTALLA NEXTION
+/////////////*******************************************/////////////
+/////////////////////////////////////////////////////////////////////
+
+
+
+
 #include <AD5933.h>
 #include <Wire.h>
 byte estado_I2C=0;
@@ -15,34 +25,12 @@ AD5933 Bio(9600);
 
 
 //DEFINICIÓN DE ENTRADAS
-//Se comentan las lineas que son señales que se calculan dentro del programa y no hacen referencia a un pin físico del microcontrolador
 
-//#define PLACA_RETORNO 7
-//#define Z_ON 2
-
-//Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
-//#define PLACA_RETORNO 7
 #define COR_ON 8
 #define COAG_ON 9
-#define CORTE_C 4
-#define COAG_C 3
-//#define Z_ON 2
+#define CORTE_C 4   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
+#define COAG_C 3    //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
-//DEFINICIÓN DE SALIDAS
-//Como no voy a usar ninguna salida de este micro todo van a ser señales "buffers"
-
-//VOy a quitar todos los buffers para tratar de que el código corra mas rapido
-/*boolean MEDIR_RETORNO_B = 0;
-boolean SD_LAPIZ_B = 0;
-boolean ACTIVAR_RETORNO_B = 0;
-boolean ACTIVAR_CORTE_B = 0;
-boolean ACTIVAR_COAG_B = 0;
-boolean ALARMA_RETORNO_B = 0;
-boolean ALARMA_CORTE_FAIL_B = 0;
-boolean SONIDO_CORTE_B = 0;
-boolean SONIDO_COAG_B = 0;
-boolean MEDIR_Z_B = 0;
-*/
 
 //Creo los buffer de las entradas para almacenar el estado de todas las entradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
@@ -61,23 +49,13 @@ void setup() {
   //ENTRADAS DE LA MAQUINA DE ESTADOS
   DEFINE_INPUTS_STATES_MACHINE();
 
-  //No hay salidas acá
-  //SALIDA DE LA MAQUINA DE ESTADOS
-  //DEFINE_OUTPUTS_STATES_MACHINE();
-
 }
 
 void loop() {
 
-
-  //READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADOS
   READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADO
-
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO
-
   SEND_STATE_I2C(); //ENVIA EL DATO DEL ESTADO AL MICROCONTROLADOR QUE GESTIONA LAS SALIDAS
-
-  
 
 }
 
@@ -88,39 +66,22 @@ void loop() {
 //FUNCIÓN PARA LEER Y ALMACENAR ENTRADAS
 void READ_INPUTS_STATES_MACHINE(){
 
-  //PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
-  //Z_ON_S = digitalRead(Z_ON);
-//Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardware
-
-  
-  //PLACA_RETORNO_S = digitalRead(PLACA_RETORNO);
-
-  //Acá va el código para capturar el estado de la placa 
-  //Código de andres
   PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
   Z_ON_REQUEST();
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
   CORTE_C_S = digitalRead(CORTE_C);
   COAG_C_S = digitalRead(COAG_C);
-  //Z_ON_S = digitalRead(Z_ON);
 }
 
 
 //FUNCIONES PARA SETEAR ENTRADAS Y SALIDAS DE LA MAQUINA DE ESTADOS
 void DEFINE_INPUTS_STATES_MACHINE(){
 
-//pinMode(PLACA_RETORNO, INPUT);
-//pinMode(Z_ON, INPUT);
-//Voy a habilitar temporalmene las señales internas como entradas para poder hacer las pruebas con hardwar
-  
-  //pinMode(PLACA_RETORNO, INPUT);
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
   pinMode(CORTE_C, INPUT);
   pinMode(COAG_C, INPUT);
-  //pinMode(Z_ON, INPUT);
-
 }
 
 void SEND_STATE_I2C() {
@@ -128,7 +89,6 @@ void SEND_STATE_I2C() {
   estado_I2C = ESTADO;
   Serial.println(estado_I2C);
   Wire.beginTransmission(8); // transmit to device #8
-  //Wire.write("x is ");        // sends five bytes
   Wire.write(estado_I2C);              // sends one byte
   Wire.endTransmission();    // stop transmitting
   delay(10);
