@@ -1,8 +1,10 @@
 
 #include <SPI.h>
-#define PWM_pin 6
 
-const int slaveSelectPin_DDS1 = 10;
+#define selector 6
+#define PWM_pin 5
+
+const int slaveSelectPin_DDS1 = 14;
 
   //* CS - to digital pin 10  (SS pin)
   //* SDI - to digital pin 11 (MOSI pin)
@@ -10,9 +12,12 @@ const int slaveSelectPin_DDS1 = 10;
 
 #define SPI_CLOCK_SPEED      12000000
 
-#define this_pin 5
 void setup() {
-  TCCR0B = _BV(CS01);
+
+  pinMode(selector,OUTPUT);
+  digitalWrite(selector,HIGH);
+  
+  //TCCR0B = _BV(CS01);  MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
   pinMode(slaveSelectPin_DDS1,OUTPUT);
   // initialize SPI:
   SPI.begin();
@@ -25,7 +30,8 @@ void setup() {
 }
 
 void loop() {
-  analogWrite(PWM_pin,200);
+  analogWrite(PWM_pin,255);
+  digitalWrite(selector,LOW);
 }
 
 
@@ -48,5 +54,12 @@ void SET_DDS_1() {
   digitalWrite(slaveSelectPin_DDS1, HIGH);
   SPI.endTransaction();
 }
+
+void SELECCION_MUX(){
+
+  
+  
+  
+  }
 
 

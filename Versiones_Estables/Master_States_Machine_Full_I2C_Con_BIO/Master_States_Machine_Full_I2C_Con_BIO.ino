@@ -1,18 +1,39 @@
+
+
 /////////////////////////////////////////////////////////////////////
 /////////////*******************************************/////////////
 /////////////***********#1 BIOIMPEDENCEMETER************/////////////
-//ACÁ SE LEEN LAS ENTRADAS DE LA MÁQUINA DE ESTADOS, SE EJECUA LA LÓGICA Y SE ENVIAN LAS ACCIONES
+//ACÁ SE LEEN LAS ENTRADAS DE LA MÁQUINA DE ESTADOS, SE EJECUTA LA LÓGICA Y SE ENVIAN LAS ACCIONES
 //AL RESTO DE PLACA, ADICIONAL CAPTURA Y ACTUALIZA LOS DATOS DE LA PANTALLA NEXTION
 /////////////*******************************************/////////////
 /////////////////////////////////////////////////////////////////////
 
 
-
-
 #include <AD5933.h>
 #include <Wire.h>
+#include <Nextion.h>
 byte estado_I2C=0;
 AD5933 Bio(9600);
+
+
+#define RxD 7
+#define TxD 6
+String Modo_Corte = "";
+String Modo_Coag = "";
+
+SoftwareSerial nextion(RxD,TxD); //Recordar que puedo usar el virtual o puertos en hardware
+int Potencia_Corte=0;
+int Potencia_Coag=0;
+int Pot=0;
+boolean bt_puro=0;
+boolean bt_mixto=0;
+boolean bt_sangrado=0;
+
+boolean bt_alto=0;
+boolean bt_medio=0;
+boolean bt_bajo=0;
+
+Nextion myNextion(nextion,9600);
 
 //DEFINICION DE ESTADOS
 #define INICIO 0
@@ -25,27 +46,33 @@ AD5933 Bio(9600);
 
 
 //DEFINICIÓN DE ENTRADAS
+#define SD_LAPIZ_HIGH 5
+#define COR_ON 3
+#define COAG_ON 4
+#define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
+#define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
-#define COR_ON 8
-#define COAG_ON 9
-#define CORTE_C 4   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
-#define COAG_C 3    //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
-
-//Creo los buffer de las entradas para almacenar el estado de todas las entradas y trabajar de la misma forma que un plc
+//Creo los buffer de las entradas para almacenar el estado de todas las e8ntradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
 boolean PLACA_RETORNO_S = 0;
 boolean COR_ON_S = 0;
 boolean COAG_ON_S = 0;
+
 boolean CORTE_C_S = 0;
 boolean COAG_C_S = 0;
+
 boolean Z_ON_S = 0;
 
 
 void setup() {
 
+  
   Wire.begin(); // join i2c bus
   Serial.begin(9600);
+  myNextion.init();
+  pinMode(SD_LAPIZ_HIGH,OUTPUT);
+  digitalWrite(SD_LAPIZ_HIGH,HIGH);
   //ENTRADAS DE LA MAQUINA DE ESTADOS
   DEFINE_INPUTS_STATES_MACHINE();
 
@@ -80,8 +107,8 @@ void DEFINE_INPUTS_STATES_MACHINE(){
 
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
-  pinMode(CORTE_C, INPUT);
-  pinMode(COAG_C, INPUT);
+  pinMode(CORTE_C, INPUT_PULLUP);
+  pinMode(COAG_C, INPUT_PULLUP);
 }
 
 void SEND_STATE_I2C() {
@@ -89,7 +116,7 @@ void SEND_STATE_I2C() {
   estado_I2C = ESTADO;
   Serial.println(estado_I2C);
   Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(estado_I2C);              // sends one byte
+  Wire.write(estado_I2C);    // sends one byte
   Wire.endTransmission();    // stop transmitting
   delay(10);
 }
@@ -99,7 +126,7 @@ void PLACA_RETORNO_REQUEST(){
 
     int Valor_Impedancia = Bio.impedance();
     Serial.println(Valor_Impedancia);
-    if(Valor_Impedancia<480){
+    if(Valor_Impedancia<1000){
         PLACA_RETORNO_S = true;
       }else{
         PLACA_RETORNO_S = false;  
@@ -111,6 +138,7 @@ void PLACA_RETORNO_REQUEST(){
 void Z_ON_REQUEST(){
 
     int Valor_Z = Bio.impedance();
+    Serial.println(Valor_Z);
     if(Valor_Z<2500){
         Z_ON_S = true;
       }else{
@@ -125,11 +153,14 @@ void TURN_ON_STATES_MACHINE(){
   switch (ESTADO) {
       case 0:
         //Serial.println("Estado 0");
+        STANDBY();
         ESTADO = MONITOREAR_PLACA;
+
         break;
 
       case 1:
         //Serial.println("Estado 1");
+        ALARMA_PLACA();
         if(PLACA_RETORNO_S==1){
             ESTADO = MONITOREAR_Z;
         } else if((COR_ON_S || COAG_ON_S) & !PLACA_RETORNO_S){
@@ -141,6 +172,7 @@ void TURN_ON_STATES_MACHINE(){
 
       case 2:
         //Serial.println("Estado 2");
+        ALARMA_PLACA();
         if(!COR_ON_S & !COAG_ON_S==1){
             ESTADO = MONITOREAR_PLACA;
         }
@@ -148,6 +180,7 @@ void TURN_ON_STATES_MACHINE(){
 
       case 3:
           //Serial.println("Estado 3");
+          PLACA_OK();
           if(Z_ON_S==1){
               ESTADO = ELECCION_MODO;
           } else {
@@ -168,7 +201,9 @@ void TURN_ON_STATES_MACHINE(){
 
       case 5:
         //Serial.println("Estado 5");
-        if(CORTE_C_S==1){
+        CORTANDO();
+        delay(30000); //Borrar por favor, son solo para pruebas
+        if(1){
             ESTADO = INICIO;
         } else {
             // ME QUEDO EN EL MISMO ESTADO
@@ -177,7 +212,9 @@ void TURN_ON_STATES_MACHINE(){
 
       case 6:
         //Serial.println("Estado 6");
-        if(COAG_C_S==1){
+        COAGULANDO();
+        delay(30000); //Borrar por favor, son solo para pruebas
+        if(1){
             ESTADO = INICIO;
         } else {
             // ME QUEDO EN EL MISMO ESTADO
@@ -189,4 +226,79 @@ void TURN_ON_STATES_MACHINE(){
       ESTADO=0;
   }
 }
+
+void CAPTURA_POTENCIA_LCD(){
+  
+  Pot = myNextion.getComponentValue("Home.va0");
+  if(Pot>0 && Pot<=100){
+      Potencia_Corte=Pot;
+    }
+    
+  Pot = myNextion.getComponentValue("Home.va1");
+  if(Pot>0 && Pot<=100){
+      Potencia_Coag=Pot;
+    }
+  }
+
+void CAPTURA_MODO_CORTE(){
+  
+  bt_puro = myNextion.getComponentValue("Home.bt0");
+  bt_mixto = myNextion.getComponentValue("Home.bt1");
+  bt_sangrado = myNextion.getComponentValue("Home.bt2");
+
+  if(bt_puro){
+      Modo_Corte = "Puro";
+    }else if(bt_mixto){
+      Modo_Corte = "Mixto";
+      } else if(bt_sangrado){
+          Modo_Corte = "Sangrado";
+        } else{
+          Modo_Corte = "No_Corte";
+          }
+  }
+
+void CAPTURA_MODO_COAG(){
+  
+  bt_alto = myNextion.getComponentValue("Home.bt3");
+  bt_medio = myNextion.getComponentValue("Home.bt4");
+  bt_bajo = myNextion.getComponentValue("Home.bt5");
+
+  if(bt_alto){
+      Modo_Coag = "Alto";
+    }else if(bt_medio){
+      Modo_Coag = "Medio";
+      } else if(bt_bajo){
+          Modo_Coag = "Bajo";
+        } else{
+          Modo_Coag = "No_Coag";
+          }
+  }
+void ALARMA_PLACA(){
+  //myNextion.sendCommand("page Alerta_Placa");
+  myNextion.sendCommand("vis Home.p0,1");
+  myNextion.sendCommand("Home.p0.pic=14");
+  }
+
+void PLACA_OK(){
+  //myNextion.sendCommand("page Alerta_Placa");
+  myNextion.sendCommand("vis Home.p0,1");
+  myNextion.sendCommand("Home.p0.pic=10");
+  }
+
+
+void CORTANDO(){
+  myNextion.sendCommand("Home.n0.pco=63488");
+  //**Actualizar por cambio de pantalla a Cortando
+  }
+
+void COAGULANDO(){
+  myNextion.sendCommand("Home.n1.pco=63488");    
+  //**Actualizar por cambio de pantalla a Coagulando
+  }
+
+void STANDBY(){
+  myNextion.sendCommand("Home.n0.pco=65535");
+  myNextion.sendCommand("Home.n1.pco=65535");
+  //**Actualizar por cambio de pantalla a Home
+  }
 
