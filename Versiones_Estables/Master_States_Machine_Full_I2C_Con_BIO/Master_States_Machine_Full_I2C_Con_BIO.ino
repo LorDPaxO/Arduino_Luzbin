@@ -13,7 +13,8 @@
 #include <Wire.h>
 #include <Nextion.h>
 byte estado_I2C=0;
-AD5933 Bio(9600);
+AD5933 Bio(19200);
+
 
 
 #define RxD 7
@@ -65,6 +66,13 @@ boolean COAG_C_S = 0;
 boolean Z_ON_S = 0;
 
 
+//Variables para el control DC
+boolean State_DC = false;
+int Bio_Val=0;
+int Pot_Val=0;
+int Modo_Corte_Val=0;
+
+
 void setup() {
 
   
@@ -82,7 +90,7 @@ void loop() {
 
   READ_INPUTS_STATES_MACHINE(); //LEE Y ALMACENA EL ESTADO DE LAS ENTRADAS DE LA MAQUINA DE ESTADO
   TURN_ON_STATES_MACHINE(); //ARRANCA LA MÁQUINA DE ESTADO
-  SEND_STATE_I2C(); //ENVIA EL DATO DEL ESTADO AL MICROCONTROLADOR QUE GESTIONA LAS SALIDAS
+  SEND_DATA_I2C(); //ENVIA LOS DATOS POR MEDIO DE I2C
 
 }
 
@@ -111,14 +119,35 @@ void DEFINE_INPUTS_STATES_MACHINE(){
   pinMode(COAG_C, INPUT_PULLUP);
 }
 
-void SEND_STATE_I2C() {
+void SEND_DATA_I2C() {
 
-  estado_I2C = ESTADO;
-  Serial.println(estado_I2C);
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write(estado_I2C);    // sends one byte
-  Wire.endTransmission();    // stop transmitting
-  delay(10);
+    //ENVIO DATO DE ESTADO A LA PLACA GESTORA DE SALIDAS
+    estado_I2C = ESTADO;
+    Serial.println(estado_I2C);
+    Wire.beginTransmission(8); // transmit to device #8
+    Wire.write(estado_I2C);    // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    delay(10);
+
+    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
+    Wire.beginTransmission(9); // transmit to device #9
+    Wire.write(Pot_Val);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    delay(10);
+    
+    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
+    Wire.beginTransmission(9); // transmit to device #9
+    Wire.write(Bio_Val);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    delay(10);
+
+    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
+    Wire.beginTransmission(9); // transmit to device #9
+    Wire.write(Modo_Corte_Val);              // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    delay(10);
+
+  
 }
 
 
@@ -126,7 +155,7 @@ void PLACA_RETORNO_REQUEST(){
 
     int Valor_Impedancia = Bio.impedance();
     Serial.println(Valor_Impedancia);
-    if(Valor_Impedancia<1000){
+    if(Valor_Impedancia<100){
         PLACA_RETORNO_S = true;
       }else{
         PLACA_RETORNO_S = false;  
@@ -138,8 +167,11 @@ void PLACA_RETORNO_REQUEST(){
 void Z_ON_REQUEST(){
 
     int Valor_Z = Bio.impedance();
+    if(ESTADO==3){
+        Bio_Val=Valor_Z; //Creo un buffer para el valor de bioimpedancia
+      }
     Serial.println(Valor_Z);
-    if(Valor_Z<2500){
+    if(Valor_Z<1000){
         Z_ON_S = true;
       }else{
         Z_ON_S = false;  
@@ -202,7 +234,7 @@ void TURN_ON_STATES_MACHINE(){
       case 5:
         //Serial.println("Estado 5");
         CORTANDO();
-        delay(30000); //Borrar por favor, son solo para pruebas
+        delay(5000); //Borrar por favor, son solo para pruebas
         if(1){
             ESTADO = INICIO;
         } else {
@@ -227,16 +259,18 @@ void TURN_ON_STATES_MACHINE(){
   }
 }
 
-void CAPTURA_POTENCIA_LCD(){
+void CAPTURA_POTENCIA_LCD(int sel){
   
   Pot = myNextion.getComponentValue("Home.va0");
-  if(Pot>0 && Pot<=100){
+  if(sel==1 && Pot>0 && Pot<=100){
       Potencia_Corte=Pot;
+      Pot_Val=Potencia_Corte;
     }
     
   Pot = myNextion.getComponentValue("Home.va1");
-  if(Pot>0 && Pot<=100){
+  if(sel==2 && Pot>0 && Pot<=100){
       Potencia_Coag=Pot;
+      Pot_Val=Potencia_Coag;
     }
   }
 
@@ -248,12 +282,16 @@ void CAPTURA_MODO_CORTE(){
 
   if(bt_puro){
       Modo_Corte = "Puro";
+      Modo_Corte_Val=1;
     }else if(bt_mixto){
       Modo_Corte = "Mixto";
+      Modo_Corte_Val=2;
       } else if(bt_sangrado){
           Modo_Corte = "Sangrado";
+          Modo_Corte_Val=3;
         } else{
           Modo_Corte = "No_Corte";
+          Modo_Corte_Val=0;
           }
   }
 
@@ -265,12 +303,16 @@ void CAPTURA_MODO_COAG(){
 
   if(bt_alto){
       Modo_Coag = "Alto";
+      Modo_Corte_Val=4;
     }else if(bt_medio){
       Modo_Coag = "Medio";
+      Modo_Corte_Val=5;
       } else if(bt_bajo){
           Modo_Coag = "Bajo";
+          Modo_Corte_Val=6;
         } else{
           Modo_Coag = "No_Coag";
+          Modo_Corte_Val=0;
           }
   }
 void ALARMA_PLACA(){
@@ -287,18 +329,27 @@ void PLACA_OK(){
 
 
 void CORTANDO(){
-  myNextion.sendCommand("Home.n0.pco=63488");
+  //myNextion.sendCommand("page Cortando");
+  myNextion.sendCommand("click b4,1");
+  
+  CAPTURA_POTENCIA_LCD(1);
+  CAPTURA_MODO_CORTE();
+  
   //**Actualizar por cambio de pantalla a Cortando
   }
 
 void COAGULANDO(){
-  myNextion.sendCommand("Home.n1.pco=63488");    
+  //myNextion.sendCommand("page Coagulando");
+  myNextion.sendCommand("click b5,1");
+  CAPTURA_POTENCIA_LCD(2);
+  CAPTURA_MODO_COAG();
   //**Actualizar por cambio de pantalla a Coagulando
   }
 
 void STANDBY(){
-  myNextion.sendCommand("Home.n0.pco=65535");
-  myNextion.sendCommand("Home.n1.pco=65535");
+  myNextion.sendCommand("page Home");
   //**Actualizar por cambio de pantalla a Home
   }
+
+
 
