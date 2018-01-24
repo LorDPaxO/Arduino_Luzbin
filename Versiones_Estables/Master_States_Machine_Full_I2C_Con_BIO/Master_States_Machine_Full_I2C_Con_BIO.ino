@@ -15,8 +15,6 @@
 byte estado_I2C=0;
 AD5933 Bio(19200);
 
-
-
 #define RxD 7
 #define TxD 6
 String Modo_Corte = "";
@@ -53,6 +51,9 @@ Nextion myNextion(nextion,9600);
 #define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 #define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
+//Definición de salida para reset control dc
+#define RESET_CONTROL_DC_PIN 17
+
 
 //Creo los buffer de las entradas para almacenar el estado de todas las e8ntradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
@@ -70,15 +71,21 @@ boolean Z_ON_S = 0;
 boolean State_DC = false;
 int Bio_Val=0;
 int Pot_Val=0;
-int Modo_Corte_Val=0;
+int Modo_Corte_Val=1;
+
+byte Bio_ValF;
+byte Bio_ValS;
 
 
 void setup() {
 
-  
   Wire.begin(); // join i2c bus
   Serial.begin(9600);
   myNextion.init();
+  pinMode(RESET_CONTROL_DC_PIN,OUTPUT);
+  digitalWrite(RESET_CONTROL_DC_PIN,HIGH);
+  delay(10);
+  digitalWrite(RESET_CONTROL_DC_PIN,LOW);
   pinMode(SD_LAPIZ_HIGH,OUTPUT);
   digitalWrite(SD_LAPIZ_HIGH,HIGH);
   //ENTRADAS DE LA MAQUINA DE ESTADOS
@@ -128,40 +135,17 @@ void SEND_DATA_I2C() {
     Wire.write(estado_I2C);    // sends one byte
     Wire.endTransmission();    // stop transmitting
     delay(10);
-
-    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
-    Wire.beginTransmission(9); // transmit to device #9
-    Wire.write(Pot_Val);              // sends one byte
-    Wire.endTransmission();    // stop transmitting
-    delay(10);
-    
-    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
-    Wire.beginTransmission(9); // transmit to device #9
-    Wire.write(Bio_Val);              // sends one byte
-    Wire.endTransmission();    // stop transmitting
-    delay(10);
-
-    //Inicio conexión con esclavo 9 y envio dato de Bioimpedancia a placa Control dc
-    Wire.beginTransmission(9); // transmit to device #9
-    Wire.write(Modo_Corte_Val);              // sends one byte
-    Wire.endTransmission();    // stop transmitting
-    delay(10);
-
-  
 }
 
 
 void PLACA_RETORNO_REQUEST(){
 
     int Valor_Impedancia = Bio.impedance();
-    Serial.println(Valor_Impedancia);
-    if(Valor_Impedancia<100){
+    if(Valor_Impedancia<300){
         PLACA_RETORNO_S = true;
       }else{
         PLACA_RETORNO_S = false;  
       }
-      Serial.println("Placa de Retorno");
-      Serial.println(PLACA_RETORNO_S);
   }
 
 void Z_ON_REQUEST(){
@@ -171,7 +155,7 @@ void Z_ON_REQUEST(){
         Bio_Val=Valor_Z; //Creo un buffer para el valor de bioimpedancia
       }
     Serial.println(Valor_Z);
-    if(Valor_Z<1000){
+    if(Valor_Z<2500){
         Z_ON_S = true;
       }else{
         Z_ON_S = false;  
@@ -186,6 +170,9 @@ void TURN_ON_STATES_MACHINE(){
       case 0:
         //Serial.println("Estado 0");
         STANDBY();
+        digitalWrite(RESET_CONTROL_DC_PIN,HIGH);
+        delay(10);
+        digitalWrite(RESET_CONTROL_DC_PIN,LOW);
         ESTADO = MONITOREAR_PLACA;
 
         break;
@@ -215,6 +202,7 @@ void TURN_ON_STATES_MACHINE(){
           PLACA_OK();
           if(Z_ON_S==1){
               ESTADO = ELECCION_MODO;
+              I2C_CONTROL_DC();
           } else {
               //ESTADO = MONITOREAR_PLACA;
           }
@@ -258,6 +246,34 @@ void TURN_ON_STATES_MACHINE(){
       ESTADO=0;
   }
 }
+
+
+void I2C_CONTROL_DC(){
+  Bio_Comm(); 
+  Serial.println("Bio_Val");
+  Serial.println(Bio_Val);
+  Serial.println("Pot_Val");
+  Serial.println(Pot_Val);
+  Serial.println("Modo_Corte_Val");
+  Serial.println(Modo_Corte_Val);
+  
+  Wire.beginTransmission(9); // transmit to device #9
+  Wire.write(20);               // sends one byte
+//  Wire.write(Bio_ValF);              // sends one byte
+//  Wire.write(Bio_ValS);              // sends one byte
+//  Wire.write(1);        // sends one byte
+//  Wire.write(1);
+  Wire.endTransmission();    // stop transmitting
+  }
+
+//conversor para hacer comunicación I2C 
+
+void Bio_Comm(){
+  Bio_Val=1000;
+  Bio_ValF = (Bio_Val >> 8)&(11111111);
+  Bio_ValS = Bio_Val; 
+  }
+
 
 void CAPTURA_POTENCIA_LCD(int sel){
   
