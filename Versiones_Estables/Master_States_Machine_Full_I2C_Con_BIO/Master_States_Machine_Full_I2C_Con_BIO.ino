@@ -24,6 +24,7 @@ SoftwareSerial nextion(RxD,TxD); //Recordar que puedo usar el virtual o puertos 
 int Potencia_Corte=0;
 int Potencia_Coag=0;
 int Pot=0;
+int t;
 boolean bt_puro=0;
 boolean bt_mixto=0;
 boolean bt_sangrado=0;
@@ -69,6 +70,10 @@ boolean State_DC = false;
 int Bio_Val=0;
 int Pot_Val=0;
 int Modo_Corte_Val=1;
+float Val;
+float Vrms;
+float Vamp;
+int Volt_Value;
 
 byte Bio_ValF;
 byte Bio_ValS;
@@ -148,7 +153,7 @@ void Z_ON_REQUEST(){
         Bio_Val=Valor_Z; //Creo un buffer para el valor de bioimpedancia
       }
     Serial.println(Valor_Z);
-    if(Valor_Z<2500){
+    if(Valor_Z<1000){
         Z_ON_S = true;
       }else{
         Z_ON_S = false;  
@@ -239,24 +244,30 @@ void TURN_ON_STATES_MACHINE(){
 
 
 void I2C_CONTROL_DC(){
-  
-  Bio_Comm(); //Valor de bioimpedancia
+
+  CAPTURA_POTENCIA_LCD(1);
+  Bio_Val = 800;
+  //Pot_Val = 517;
+  Calc_Power(Pot_Val, Bio_Val, Modo_Corte_Val); //Valor de bioimpedancia
   Wire.beginTransmission(9); // transmit to device #9
-  Wire.write(100);               // Potencia en watts
-  Wire.write(Bio_ValF);              // sends one byte
-  Wire.write(Bio_ValS);              // sends one byte
-  Wire.write(1);        // Tipo de corte
-  Wire.write(1);        // 
+  Wire.write(Pot_Val);               // Tension de Salida
   Wire.endTransmission();    // stop transmitting
+  Serial.println("DATO DE VOLTAJE A LA SALIDA ES:");
+  Serial.println(Pot_Val);
   }
 
 //conversor para hacer comunicación I2C 
 
-void Bio_Comm(){
-  Bio_Val=1000; //valor de impedancia
-  Bio_ValF = (Bio_Val >> 8)&(11111111);
-  Bio_ValS = Bio_Val; 
-  }
+void Calc_Power (long P_Value, long B_Value, float Cycle_Value)
+{  
+
+  Val = B_Value * P_Value; 
+  Vrms = sqrt(Val);
+  Vamp = Vrms/(sqrt(2*Cycle_Value));                         // Los valores de Factor de uso Fac_Use se calcularon al obtener la formula Vrms = Vamp/(sqrt(2*Tciclo util))   
+  Volt_Value = Vamp/13;
+  Serial.println("Volt_Value");
+  Serial.println(Volt_Value);
+}
 
 
 void CAPTURA_POTENCIA_LCD(int sel){
