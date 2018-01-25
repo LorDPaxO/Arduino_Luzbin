@@ -30,6 +30,8 @@ void setup() {
 }
 
 void loop() {
+
+  
   analogWrite(PWM_pin,255);
   digitalWrite(selector,LOW);
 }
@@ -57,8 +59,6 @@ void SET_DDS_1() {
 
 void SELECCION_MUX(){
 
-  
-  
   
   }
 

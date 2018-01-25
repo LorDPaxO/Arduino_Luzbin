@@ -51,9 +51,6 @@ Nextion myNextion(nextion,9600);
 #define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 #define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
-//Definición de salida para reset control dc
-#define RESET_CONTROL_DC_PIN 17
-
 
 //Creo los buffer de las entradas para almacenar el estado de todas las e8ntradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
@@ -82,10 +79,6 @@ void setup() {
   Wire.begin(); // join i2c bus
   Serial.begin(9600);
   myNextion.init();
-  pinMode(RESET_CONTROL_DC_PIN,OUTPUT);
-  digitalWrite(RESET_CONTROL_DC_PIN,HIGH);
-  delay(10);
-  digitalWrite(RESET_CONTROL_DC_PIN,LOW);
   pinMode(SD_LAPIZ_HIGH,OUTPUT);
   digitalWrite(SD_LAPIZ_HIGH,HIGH);
   //ENTRADAS DE LA MAQUINA DE ESTADOS
@@ -170,9 +163,6 @@ void TURN_ON_STATES_MACHINE(){
       case 0:
         //Serial.println("Estado 0");
         STANDBY();
-        digitalWrite(RESET_CONTROL_DC_PIN,HIGH);
-        delay(10);
-        digitalWrite(RESET_CONTROL_DC_PIN,LOW);
         ESTADO = MONITOREAR_PLACA;
 
         break;
@@ -249,27 +239,21 @@ void TURN_ON_STATES_MACHINE(){
 
 
 void I2C_CONTROL_DC(){
-  Bio_Comm(); 
-  Serial.println("Bio_Val");
-  Serial.println(Bio_Val);
-  Serial.println("Pot_Val");
-  Serial.println(Pot_Val);
-  Serial.println("Modo_Corte_Val");
-  Serial.println(Modo_Corte_Val);
   
+  Bio_Comm(); //Valor de bioimpedancia
   Wire.beginTransmission(9); // transmit to device #9
-  Wire.write(20);               // sends one byte
-//  Wire.write(Bio_ValF);              // sends one byte
-//  Wire.write(Bio_ValS);              // sends one byte
-//  Wire.write(1);        // sends one byte
-//  Wire.write(1);
+  Wire.write(100);               // Potencia en watts
+  Wire.write(Bio_ValF);              // sends one byte
+  Wire.write(Bio_ValS);              // sends one byte
+  Wire.write(1);        // Tipo de corte
+  Wire.write(1);        // 
   Wire.endTransmission();    // stop transmitting
   }
 
 //conversor para hacer comunicación I2C 
 
 void Bio_Comm(){
-  Bio_Val=1000;
+  Bio_Val=1000; //valor de impedancia
   Bio_ValF = (Bio_Val >> 8)&(11111111);
   Bio_ValS = Bio_Val; 
   }
