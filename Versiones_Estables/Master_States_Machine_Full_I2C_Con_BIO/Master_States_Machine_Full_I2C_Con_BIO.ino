@@ -49,8 +49,11 @@ Nextion myNextion(nextion,9600);
 #define SD_LAPIZ_HIGH 5
 #define COR_ON 3
 #define COAG_ON 4
-#define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
-#define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
+//#define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
+//#define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
+
+//DEFINICION DE SALIDAS DEL SWITCH FUENTE CONMUTADA
+#define ACT_SW 17
 
 
 //Creo los buffer de las entradas para almacenar el estado de todas las e8ntradas y trabajar de la misma forma que un plc
@@ -85,7 +88,10 @@ void setup() {
   Serial.begin(9600);
   myNextion.init();
   pinMode(SD_LAPIZ_HIGH,OUTPUT);
+  pinMode(ACT_SW, OUTPUT);
   digitalWrite(SD_LAPIZ_HIGH,HIGH);
+  digitalWrite(ACT_SW,HIGH);
+  
   //ENTRADAS DE LA MAQUINA DE ESTADOS
   DEFINE_INPUTS_STATES_MACHINE();
 
@@ -110,8 +116,8 @@ void READ_INPUTS_STATES_MACHINE(){
   Z_ON_REQUEST();
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
-  CORTE_C_S = digitalRead(CORTE_C);
-  COAG_C_S = digitalRead(COAG_C);
+//  CORTE_C_S = digitalRead(CORTE_C);
+//  COAG_C_S = digitalRead(COAG_C);
 }
 
 
@@ -120,8 +126,8 @@ void DEFINE_INPUTS_STATES_MACHINE(){
 
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
-  pinMode(CORTE_C, INPUT_PULLUP);
-  pinMode(COAG_C, INPUT_PULLUP);
+//  pinMode(CORTE_C, INPUT_PULLUP);
+//  pinMode(COAG_C, INPUT_PULLUP);
 }
 
 void SEND_DATA_I2C() {
@@ -345,6 +351,8 @@ void CORTANDO(){
   
   CAPTURA_POTENCIA_LCD(1);
   CAPTURA_MODO_CORTE();
+  delay(50);
+  digitalWrite(ACT_SW, LOW);
   
   //**Actualizar por cambio de pantalla a Cortando
   }
@@ -354,11 +362,15 @@ void COAGULANDO(){
   myNextion.sendCommand("click b5,1");
   CAPTURA_POTENCIA_LCD(2);
   CAPTURA_MODO_COAG();
+  delay(50);
+  digitalWrite(ACT_SW, LOW);  
   //**Actualizar por cambio de pantalla a Coagulando
   }
 
 void STANDBY(){
   myNextion.sendCommand("page Home");
+  delay(50);
+  digitalWrite(ACT_SW, HIGH);
   //**Actualizar por cambio de pantalla a Home
   }
 
