@@ -141,6 +141,16 @@ void SEND_DATA_I2C() {
     delay(10);
 }
 
+//holamundocambiar
+void I2C_TIPO_CORTE() {
+
+    //ENVIO DATO DE TIPO DE CORTE
+    Wire.beginTransmission(7); // transmit to device #8
+    Wire.write(Modo_Corte_Val);    // sends one byte
+    Wire.endTransmission();    // stop transmitting
+    delay(10);
+}
+
 
 void PLACA_RETORNO_REQUEST(){
 
@@ -224,6 +234,7 @@ void TURN_ON_STATES_MACHINE(){
 
       case 5:
         //Serial.println("Estado 5");
+        I2C_TIPO_CORTE();
         CORTANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
@@ -235,6 +246,7 @@ void TURN_ON_STATES_MACHINE(){
 
       case 6:
         //Serial.println("Estado 6");
+        I2C_TIPO_CORTE();
         COAGULANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
         if(1){

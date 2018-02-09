@@ -25,7 +25,7 @@ void setup() {
   
   // MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
   //TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
-  //TCCR0B = _BV(CS01);             // Frecuencia de 3921 Hz para el pin PWM
+  TCCR0B = _BV(CS01);             // Frecuencia de 3921 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS01); // Frecuencia de 490 Hz para el pin PWM, Valor por defecto en el Microprocesador
   //TCCR0B = _BV(CS02);             // Frecuencia de 122 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS02); // Frecuencia de 30 Hz para el pin PWM
