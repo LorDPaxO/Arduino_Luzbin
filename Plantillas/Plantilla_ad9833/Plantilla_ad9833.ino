@@ -1,4 +1,4 @@
-
+#include <Wire.h>
 #include <SPI.h>
 
 #define selector 6
@@ -12,12 +12,24 @@ const int slaveSelectPin_DDS1 = 14;
 
 #define SPI_CLOCK_SPEED      12000000
 
+// Variable de tipo de corte
+int tipo_corte=1;
+
+
 void setup() {
 
+  Wire.begin(7);                // join i2c bus with address #8
+  Wire.onReceive(receiveEvent); // register event
   pinMode(selector,OUTPUT);
   digitalWrite(selector,HIGH);
   
-  //TCCR0B = _BV(CS01);  MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
+  // MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
+  //TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
+  //TCCR0B = _BV(CS01);             // Frecuencia de 3921 Hz para el pin PWM
+  //TCCR0B = _BV(CS00) | _BV(CS01); // Frecuencia de 490 Hz para el pin PWM, Valor por defecto en el Microprocesador
+  //TCCR0B = _BV(CS02);             // Frecuencia de 122 Hz para el pin PWM
+  //TCCR0B = _BV(CS00) | _BV(CS02); // Frecuencia de 30 Hz para el pin PWM
+  
   pinMode(slaveSelectPin_DDS1,OUTPUT);
   // initialize SPI:
   SPI.begin();
@@ -32,10 +44,13 @@ void setup() {
 void loop() {
 
   
-  analogWrite(PWM_pin,255);
-  digitalWrite(selector,LOW);
 }
 
+  void receiveEvent(int howMany) {
+    tipo_corte = Wire.read();
+    SELECCION_MUX();
+    //delay(10);
+  }
 
 
 void SET_DDS_1() {
@@ -59,7 +74,48 @@ void SET_DDS_1() {
 
 void SELECCION_MUX(){
 
-  
+    //Tener en cuenta sentido del multiplexor, verificar en laboratorio.
+    switch (tipo_corte) {
+      
+    case 1:    // Corte puro
+      analogWrite(PWM_pin,255);
+      digitalWrite(selector,LOW); 
+      break;
+      
+    case 2:    // Corte Mixto
+      analogWrite(PWM_pin,230);
+      digitalWrite(selector,LOW); 
+      break;
+      
+    case 3:    // Corte MinDo
+      analogWrite(PWM_pin,255);
+      digitalWrite(selector,HIGH);
+      break;
+      
+    case 4:    // Coag Alto
+      analogWrite(PWM_pin,160);
+      digitalWrite(selector,LOW); 
+      break;
+      
+    case 5:    // Coag Medio
+      analogWrite(PWM_pin,140);
+      digitalWrite(selector,LOW); 
+      break;
+      
+    case 6:    // Coag Bajo
+      analogWrite(PWM_pin,120);
+      digitalWrite(selector,LOW); 
+      break;
+      
+      default:{
+        //Si llega un dato erroneo o no llega nada se pone corte puro.
+        analogWrite(PWM_pin,255);
+        digitalWrite(selector,LOW);         
+        }
   }
+
+  // Cambiar por lo que necesitoESTADO = Wire.read();    // receive byte as an integer
+  //Serial.println(ESTADO);
+}
 
 

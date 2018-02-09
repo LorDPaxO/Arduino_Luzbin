@@ -13,6 +13,7 @@
 #define CORTAR 5
 #define COAGULAR 6
 
+
 //DEFINICIÓN DE SALIDAS DE LA TARJETA QUE GESTIONA LOS PINES DE LA MÁQUINA
 
 //MEDIR_RETORNO ***
@@ -37,6 +38,9 @@
 
 //ACTIVAR_COAG
 #define ACTIVAR_COAG_PIN 4
+
+//SONIDO
+#define SPEAKER 3
 
 //********************************************************************************************
 
@@ -137,6 +141,7 @@ void ESTADO_COAGULAR(){
    ALARMA_CORTE_FAIL(0);
    SONIDO_CORTE(0);
    SONIDO_COAG(1);
+   tone(SPEAKER,940,10);
 }
 
 void ESTADO_CORTAR(){
@@ -150,6 +155,7 @@ void ESTADO_CORTAR(){
    ALARMA_CORTE_FAIL(0);
    SONIDO_CORTE(1);
    SONIDO_COAG(0);
+   tone(SPEAKER,660,10);
 }
 
 void ESTADO_ELECCION_MODO(){

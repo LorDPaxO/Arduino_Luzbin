@@ -80,7 +80,7 @@ int Volt_Value;
 
 byte Bio_ValF;
 byte Bio_ValS;
-
+int Valor_Z_Placa_pantalla=0;
 
 void setup() {
 
@@ -147,6 +147,7 @@ void PLACA_RETORNO_REQUEST(){
     int Valor_Impedancia = Bio.impedance();
     if(Valor_Impedancia<300){
         PLACA_RETORNO_S = true;
+        myNextion.setComponentValue("Home.n2",Valor_Impedancia);
       }else{
         PLACA_RETORNO_S = false;  
       }
@@ -157,6 +158,7 @@ void Z_ON_REQUEST(){
     int Valor_Z = Bio.impedance();
     if(ESTADO==3){
         Bio_Val=Valor_Z; //Creo un buffer para el valor de bioimpedancia
+        myNextion.setComponentValue("Home.n3",Bio_Val);
       }
     Serial.println(Valor_Z);
     if(Valor_Z<1000){
@@ -223,7 +225,7 @@ void TURN_ON_STATES_MACHINE(){
       case 5:
         //Serial.println("Estado 5");
         CORTANDO();
-        delay(5000); //Borrar por favor, son solo para pruebas
+        delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
             ESTADO = INICIO;
         } else {
@@ -234,7 +236,7 @@ void TURN_ON_STATES_MACHINE(){
       case 6:
         //Serial.println("Estado 6");
         COAGULANDO();
-        delay(30000); //Borrar por favor, son solo para pruebas
+        delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
             ESTADO = INICIO;
         } else {
@@ -342,6 +344,7 @@ void PLACA_OK(){
   //myNextion.sendCommand("page Alerta_Placa");
   myNextion.sendCommand("vis Home.p0,1");
   myNextion.sendCommand("Home.p0.pic=10");
+  //Enviar Valor Impendacia
   }
 
 

@@ -24,7 +24,7 @@
 #define SONIDO_CORTE 4
 #define SONIDO_COAG 5
 #define MEDIR_Z 39
-
+//#define SPEAKER 3
 
 //DEFINO LA VARIABLE ESTADO PARA CAPTURAR EL ESTADO VIA I2C
 int ESTADO = 1;
@@ -35,7 +35,7 @@ void setup() {
   Wire.begin(8);                // join i2c bus with address #8
   Wire.onReceive(receiveEvent); // register event
   //Serial.begin(9600);           // start serial for output
-
+  //pinMode(SPEAKER,OUTPUT);
   //SALIDA DE LA MAQUINA DE ESTADOS
   SET_OUTPUTS_STATES_MACHINE();
 
@@ -120,6 +120,8 @@ void ESTADO_COAGULAR(){
    digitalWrite(ALARMA_CORTE_FAIL, 1);
    digitalWrite(SONIDO_CORTE, 1);
    digitalWrite(SONIDO_COAG, 0);
+   //tone(SPEAKER,940,10);
+   
 }
 
 void ESTADO_CORTAR(){
@@ -133,6 +135,8 @@ void ESTADO_CORTAR(){
    digitalWrite(ALARMA_CORTE_FAIL, 1);
    digitalWrite(SONIDO_CORTE, 0);
    digitalWrite(SONIDO_COAG, 1);
+   //tone(SPEAKER,660,10);
+   
 }
 
 void ESTADO_ELECCION_MODO(){
