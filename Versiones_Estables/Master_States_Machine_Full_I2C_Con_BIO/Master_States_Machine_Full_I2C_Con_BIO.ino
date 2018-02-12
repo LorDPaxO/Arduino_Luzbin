@@ -215,7 +215,7 @@ void TURN_ON_STATES_MACHINE(){
           PLACA_OK();
           if(Z_ON_S==1){
               ESTADO = ELECCION_MODO;
-              I2C_CONTROL_DC();
+              //I2C_CONTROL_DC();  ACtivar si no funcion capturando potencia por separado
           } else {
               //ESTADO = MONITOREAR_PLACA;
           }
@@ -234,7 +234,9 @@ void TURN_ON_STATES_MACHINE(){
 
       case 5:
         //Serial.println("Estado 5");
-        I2C_TIPO_CORTE();
+        I2C_CONTROL_DC(1);
+        CAPTURA_MODO_CORTE();
+        I2C_TIPO_CORTE();        
         CORTANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
@@ -246,6 +248,8 @@ void TURN_ON_STATES_MACHINE(){
 
       case 6:
         //Serial.println("Estado 6");
+        I2C_CONTROL_DC(2);
+        CAPTURA_MODO_COAG();
         I2C_TIPO_CORTE();
         COAGULANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
@@ -263,14 +267,13 @@ void TURN_ON_STATES_MACHINE(){
 }
 
 
-void I2C_CONTROL_DC(){
-
-  CAPTURA_POTENCIA_LCD(1);
+void I2C_CONTROL_DC(int seleccion){
+  CAPTURA_POTENCIA_LCD(seleccion);
   Bio_Val = 800;
   //Pot_Val = 517;
   Calc_Power(Pot_Val, Bio_Val, Modo_Corte_Val); //Valor de bioimpedancia
   Wire.beginTransmission(9); // transmit to device #9
-  Wire.write(Pot_Val);               // Tension de Salida
+  Wire.write(Pot_Val/2);               // Tension de Salida
   Wire.endTransmission();    // stop transmitting
   Serial.println("DATO DE VOLTAJE A LA SALIDA ES:");
   Serial.println(Pot_Val);

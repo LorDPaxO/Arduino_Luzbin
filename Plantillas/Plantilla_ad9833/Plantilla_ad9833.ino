@@ -21,11 +21,11 @@ void setup() {
   Wire.begin(7);                // join i2c bus with address #8
   Wire.onReceive(receiveEvent); // register event
   pinMode(selector,OUTPUT);
-  digitalWrite(selector,HIGH);
+  digitalWrite(selector,LOW);
   
   // MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
-  //TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
-  TCCR0B = _BV(CS01);             // Frecuencia de 3921 Hz para el pin PWM
+  TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
+  //TCCR0B = _BV(CS01);            // Frecuencia de 3921 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS01); // Frecuencia de 490 Hz para el pin PWM, Valor por defecto en el Microprocesador
   //TCCR0B = _BV(CS02);             // Frecuencia de 122 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS02); // Frecuencia de 30 Hz para el pin PWM
@@ -39,6 +39,8 @@ void setup() {
     delay(20);
     }
   Serial.begin(9600);
+  //Solo para pruebas
+  analogWrite(PWM_pin,128);
 }
 
 void loop() {
@@ -75,6 +77,7 @@ void SET_DDS_1() {
 void SELECCION_MUX(){
 
     //Tener en cuenta sentido del multiplexor, verificar en laboratorio.
+    //UN ESTADO ES PARA MIN SANGRADO Y OTRO ESTADO PARA SELECCIONAR ONDA DE VERDAD
     switch (tipo_corte) {
       
     case 1:    // Corte puro
@@ -83,7 +86,7 @@ void SELECCION_MUX(){
       break;
       
     case 2:    // Corte Mixto
-      analogWrite(PWM_pin,230);
+      analogWrite(PWM_pin,128);
       digitalWrite(selector,LOW); 
       break;
       
@@ -93,17 +96,17 @@ void SELECCION_MUX(){
       break;
       
     case 4:    // Coag Alto
-      analogWrite(PWM_pin,160);
+      analogWrite(PWM_pin,50);
       digitalWrite(selector,LOW); 
       break;
       
     case 5:    // Coag Medio
-      analogWrite(PWM_pin,140);
+      analogWrite(PWM_pin,37);
       digitalWrite(selector,LOW); 
       break;
       
     case 6:    // Coag Bajo
-      analogWrite(PWM_pin,120);
+      analogWrite(PWM_pin,25);
       digitalWrite(selector,LOW); 
       break;
       
