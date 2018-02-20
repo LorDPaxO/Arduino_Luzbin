@@ -271,7 +271,6 @@ void I2C_CONTROL_DC(int seleccion){
   CAPTURA_POTENCIA_LCD(seleccion);
   Bio_Val = 800;
   //Pot_Val = 517;
-  Calc_Power(Pot_Val, Bio_Val, Modo_Corte_Val); //Valor de bioimpedancia
   Wire.beginTransmission(9); // transmit to device #9
   Wire.write(Pot_Val/2);               // Tension de Salida
   Wire.endTransmission();    // stop transmitting
@@ -279,17 +278,11 @@ void I2C_CONTROL_DC(int seleccion){
   Serial.println(Pot_Val);
   }
 
-//conversor para hacer comunicación I2C 
 
-void Calc_Power (long P_Value, long B_Value, float Cycle_Value)
+void Calc_Power ()
 {  
 
-  Val = B_Value * P_Value; 
-  Vrms = sqrt(Val);
-  Vamp = Vrms/(sqrt(2*Cycle_Value));                         // Los valores de Factor de uso Fac_Use se calcularon al obtener la formula Vrms = Vamp/(sqrt(2*Tciclo util))   
-  Volt_Value = Vamp/13;
-  Serial.println("Volt_Value");
-  Serial.println(Volt_Value);
+
 }
 
 
