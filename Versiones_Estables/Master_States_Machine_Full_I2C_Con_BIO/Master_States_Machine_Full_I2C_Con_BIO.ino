@@ -25,6 +25,7 @@ int Potencia_Corte=0;
 int Potencia_Coag=0;
 int Pot=0;
 int t;
+int Voltaje_DC=0;
 boolean bt_puro=0;
 boolean bt_mixto=0;
 boolean bt_sangrado=0;
@@ -234,8 +235,8 @@ void TURN_ON_STATES_MACHINE(){
 
       case 5:
         //Serial.println("Estado 5");
-        I2C_CONTROL_DC(1);
         CAPTURA_MODO_CORTE();
+        I2C_CONTROL_DC(1);
         I2C_TIPO_CORTE();        
         CORTANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
@@ -248,8 +249,8 @@ void TURN_ON_STATES_MACHINE(){
 
       case 6:
         //Serial.println("Estado 6");
-        I2C_CONTROL_DC(2);
         CAPTURA_MODO_COAG();
+        I2C_CONTROL_DC(2);
         I2C_TIPO_CORTE();
         COAGULANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
@@ -268,21 +269,33 @@ void TURN_ON_STATES_MACHINE(){
 
 
 void I2C_CONTROL_DC(int seleccion){
+  
   CAPTURA_POTENCIA_LCD(seleccion);
-  Bio_Val = 800;
-  //Pot_Val = 517;
   Wire.beginTransmission(9); // transmit to device #9
-  Wire.write(Pot_Val/2);               // Tension de Salida
+  Wire.write(Voltaje_DC);               // Tension en fuente conmutada
+  Wire.write(Modo_Corte_Val);           //Envio modo de corte para asegurar en la tarjeta de potencia los topes máximos 
   Wire.endTransmission();    // stop transmitting
-  Serial.println("DATO DE VOLTAJE A LA SALIDA ES:");
-  Serial.println(Pot_Val);
   }
 
 
 void Calc_Power ()
 {  
-
-
+  if(Modo_Corte_Val==1 || Modo_Corte_Val==3){
+    Voltaje_DC = (9.4811+Pot_Val)/(1.8028); //Cuadrado a escala de 12 a 50 Volts
+    }
+    
+  else if(Modo_Corte_Val==2){
+    Voltaje_DC = (20+Pot_Val)/(1.67);  //Cuadrado a escala de 12 a 60 Volts
+    }
+    
+   else if(Modo_Corte_Val==4 || Modo_Corte_Val==5 || Modo_Corte_Val==6){
+      Voltaje_DC = (16.55+Pot_Val)/(1.38);  //Cuadrado a escala de 12 a 70 Volts
+      }
+      
+   else{
+      Voltaje_DC = (9.4811+Pot_Val)/(1.8028);
+    }
+  
 }
 
 
