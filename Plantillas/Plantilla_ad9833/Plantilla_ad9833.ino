@@ -13,7 +13,7 @@ const int slaveSelectPin_DDS1 = 14;
 #define SPI_CLOCK_SPEED      12000000
 
 // Variable de tipo de corte
-int tipo_corte=1;
+int tipo_corte=2;
 
 
 void setup() {
@@ -91,28 +91,28 @@ void SELECCION_MUX(){
       break;
       
     case 3:    // Corte MinDo
-      analogWrite(PWM_pin,255);
+      analogWrite(PWM_pin,128);
       digitalWrite(selector,HIGH);
       break;
       
     case 4:    // Coag Alto
-      analogWrite(PWM_pin,50);
+      analogWrite(PWM_pin,38);
       digitalWrite(selector,LOW); 
       break;
       
     case 5:    // Coag Medio
-      analogWrite(PWM_pin,37);
+      analogWrite(PWM_pin,26);
       digitalWrite(selector,LOW); 
       break;
       
     case 6:    // Coag Bajo
-      analogWrite(PWM_pin,25);
+      analogWrite(PWM_pin,16);
       digitalWrite(selector,LOW); 
       break;
       
       default:{
-        //Si llega un dato erroneo o no llega nada se pone corte puro.
-        analogWrite(PWM_pin,255);
+        //Si llega un dato erroneo o no llega nada se pone corte Mixto.
+        analogWrite(PWM_pin,128);
         digitalWrite(selector,LOW);         
         }
   }

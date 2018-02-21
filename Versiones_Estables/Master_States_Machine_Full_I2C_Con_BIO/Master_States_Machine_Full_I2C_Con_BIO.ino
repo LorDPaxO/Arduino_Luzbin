@@ -66,7 +66,7 @@ boolean COAG_ON_S = 0;
 boolean CORTE_C_S = 0;
 boolean COAG_C_S = 0;
 
-boolean Z_ON_S = 0;
+boolean Z_ON_S = true;
 
 
 //Variables para el control DC
@@ -114,7 +114,7 @@ void loop() {
 void READ_INPUTS_STATES_MACHINE(){
 
   PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
-  Z_ON_REQUEST();
+  //Z_ON_REQUEST(); //ESTÁ COMENTADO PORQUE ESTA DESHABILITADA LA FUNCION PARA AHORRAR TIEMPO DE EJECUCCIÓN
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
 //  CORTE_C_S = digitalRead(CORTE_C);
@@ -162,14 +162,17 @@ void PLACA_RETORNO_REQUEST(){
       }else{
         PLACA_RETORNO_S = false;  
       }
+
   }
 
 void Z_ON_REQUEST(){
+  
+//Voy a omitir este paso descomentar y borrar ultima linea de la funcion para devolverme
 
-    int Valor_Z = Bio.impedance();
+/*    int Valor_Z = Bio.impedance();
     if(ESTADO==3){
         Bio_Val=Valor_Z; //Creo un buffer para el valor de bioimpedancia
-        myNextion.setComponentValue("Home.n3",Bio_Val);
+        //myNextion.setComponentValue("Home.n3",Bio_Val); Decomentar para debugger de impedancia de paciente
       }
     Serial.println(Valor_Z);
     if(Valor_Z<1000){
@@ -177,6 +180,10 @@ void Z_ON_REQUEST(){
       }else{
         Z_ON_S = false;  
       }
+
+            */  
+      //RECORDAR QUE PUEDO SALTAR DE UNA EN LA MAQUINA DE ESTADOS
+      Z_ON_S=true;
   }
 
 
@@ -237,7 +244,7 @@ void TURN_ON_STATES_MACHINE(){
         //Serial.println("Estado 5");
         CAPTURA_MODO_CORTE();
         I2C_CONTROL_DC(1);
-        I2C_TIPO_CORTE();        
+        I2C_TIPO_CORTE();  //Envio para forma de onda      
         CORTANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
@@ -251,7 +258,7 @@ void TURN_ON_STATES_MACHINE(){
         //Serial.println("Estado 6");
         CAPTURA_MODO_COAG();
         I2C_CONTROL_DC(2);
-        I2C_TIPO_CORTE();
+        I2C_TIPO_CORTE(); //Envio para forma de onda
         COAGULANDO();
         delay(10000); //Borrar por favor, son solo para pruebas
         if(1){
@@ -271,29 +278,32 @@ void TURN_ON_STATES_MACHINE(){
 void I2C_CONTROL_DC(int seleccion){
   
   CAPTURA_POTENCIA_LCD(seleccion);
+  Calc_Power();
   Wire.beginTransmission(9); // transmit to device #9
   Wire.write(Voltaje_DC);               // Tension en fuente conmutada
-  Wire.write(Modo_Corte_Val);           //Envio modo de corte para asegurar en la tarjeta de potencia los topes máximos 
+  Wire.write(Modo_Corte_Val);           //Envio modo de corte para asegurar en la tarjeta de potencia los topes máximos
   Wire.endTransmission();    // stop transmitting
+  
+  //myNextion.setComponentValue("Home.n3",Voltaje_DC); //Borrar solo es para pruebas de que el valor de voltaje enviado es correcto.
   }
 
 
-void Calc_Power ()
+void Calc_Power()
 {  
-  if(Modo_Corte_Val==1 || Modo_Corte_Val==3){
+  if(Modo_Corte_Val==1){
     Voltaje_DC = (9.4811+Pot_Val)/(1.8028); //Cuadrado a escala de 12 a 50 Volts
     }
     
-  else if(Modo_Corte_Val==2){
+  else if(Modo_Corte_Val==2 || Modo_Corte_Val==3){
     Voltaje_DC = (20+Pot_Val)/(1.67);  //Cuadrado a escala de 12 a 60 Volts
     }
     
    else if(Modo_Corte_Val==4 || Modo_Corte_Val==5 || Modo_Corte_Val==6){
-      Voltaje_DC = (16.55+Pot_Val)/(1.38);  //Cuadrado a escala de 12 a 70 Volts
+      Voltaje_DC = (20+Pot_Val)/(1.67);  //Cuadrado a escala de 12 a 60 Volts Aprovechar los 3 volts adicionales para que sea hasta 63.algo
       }
       
    else{
-      Voltaje_DC = (9.4811+Pot_Val)/(1.8028);
+      Voltaje_DC = (20+Pot_Val)/(1.67); //EN CASO DE ERROR EL DEFAULT ES CORTE MIXTO
     }
   
 }
@@ -371,10 +381,11 @@ void PLACA_OK(){
 
 void CORTANDO(){
   //myNextion.sendCommand("page Cortando");
-  myNextion.sendCommand("click b4,1");
-  
+  myNextion.sendCommand("click b4,1"); //Descomentar para funcionamiento normal
+  //Voltaje_DC
   CAPTURA_POTENCIA_LCD(1);
   CAPTURA_MODO_CORTE();
+  myNextion.setComponentValue("Cortando.n2",Voltaje_DC); //Solo de debugger
   delay(50);
   digitalWrite(ACT_SW, LOW);
   
@@ -383,9 +394,10 @@ void CORTANDO(){
 
 void COAGULANDO(){
   //myNextion.sendCommand("page Coagulando");
-  myNextion.sendCommand("click b5,1");
+  myNextion.sendCommand("click b5,1"); //Descomentar para funcionamiento normal
   CAPTURA_POTENCIA_LCD(2);
   CAPTURA_MODO_COAG();
+  myNextion.setComponentValue("Coagulando.n2",Voltaje_DC); //Solo de debugger
   delay(50);
   digitalWrite(ACT_SW, LOW);  
   //**Actualizar por cambio de pantalla a Coagulando
