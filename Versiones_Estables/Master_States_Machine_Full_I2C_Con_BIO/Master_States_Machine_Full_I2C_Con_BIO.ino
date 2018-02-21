@@ -113,7 +113,7 @@ void loop() {
 //FUNCIÓN PARA LEER Y ALMACENAR ENTRADAS
 void READ_INPUTS_STATES_MACHINE(){
 
-  PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
+  //PLACA_RETORNO_REQUEST(); // CAPTURO Y ALMACENO EN EL BUFER
   //Z_ON_REQUEST(); //ESTÁ COMENTADO PORQUE ESTA DESHABILITADA LA FUNCION PARA AHORRAR TIEMPO DE EJECUCCIÓN
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
@@ -200,18 +200,18 @@ void TURN_ON_STATES_MACHINE(){
 
       case 1:
         //Serial.println("Estado 1");
-        ALARMA_PLACA();
+        PLACA_RETORNO_REQUEST();
         if(PLACA_RETORNO_S==1){
-            ESTADO = MONITOREAR_Z;
-        } else if((COR_ON_S || COAG_ON_S) & !PLACA_RETORNO_S){
-            ESTADO = CORTE_FAIL;
+            ESTADO = ELECCION_MODO;
+            PLACA_OK();
         } else {
             //SIGO EN EL MISMO ESTADO;
+            ALARMA_PLACA();
         }
         break;
 
       case 2:
-        //Serial.println("Estado 2");
+        //Serial.println("Estado 2"); // ESTE ESTADO, ESTA DESHABILITADO
         ALARMA_PLACA();
         if(!COR_ON_S & !COAG_ON_S==1){
             ESTADO = MONITOREAR_PLACA;
@@ -219,7 +219,7 @@ void TURN_ON_STATES_MACHINE(){
         break;
 
       case 3:
-          //Serial.println("Estado 3");
+          //Serial.println("Estado 3"); // ESTE ESTADO, ESTÁ DESHABILITADO
           PLACA_OK();
           if(Z_ON_S==1){
               ESTADO = ELECCION_MODO;
@@ -386,7 +386,7 @@ void CORTANDO(){
   CAPTURA_POTENCIA_LCD(1);
   CAPTURA_MODO_CORTE();
   myNextion.setComponentValue("Cortando.n2",Voltaje_DC); //Solo de debugger
-  delay(50);
+  delay(10);
   digitalWrite(ACT_SW, LOW);
   
   //**Actualizar por cambio de pantalla a Cortando
@@ -398,14 +398,14 @@ void COAGULANDO(){
   CAPTURA_POTENCIA_LCD(2);
   CAPTURA_MODO_COAG();
   myNextion.setComponentValue("Coagulando.n2",Voltaje_DC); //Solo de debugger
-  delay(50);
+  delay(10);
   digitalWrite(ACT_SW, LOW);  
   //**Actualizar por cambio de pantalla a Coagulando
   }
 
 void STANDBY(){
   myNextion.sendCommand("page Home");
-  delay(50);
+  delay(10);
   digitalWrite(ACT_SW, HIGH);
   //**Actualizar por cambio de pantalla a Home
   }
