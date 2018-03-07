@@ -34,6 +34,8 @@ boolean bt_alto=0;
 boolean bt_medio=0;
 boolean bt_bajo=0;
 
+int cuenta=0;
+
 Nextion myNextion(nextion,9600);
 
 //DEFINICION DE ESTADOS
@@ -50,12 +52,12 @@ Nextion myNextion(nextion,9600);
 #define SD_LAPIZ_HIGH 5
 #define COR_ON 3
 #define COAG_ON 4
+#define MinDo 16  //CAMBIAR POR EL NÚMERO DE PIN REAL
 //#define CORTE_C 16   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 //#define COAG_C 17   //PROBAR SI SIRVE EL SENSOR DE CORRIENTE, SI NO, NO VAN LAS LINEAS 31 Y 32
 
 //DEFINICION DE SALIDAS DEL SWITCH FUENTE CONMUTADA
 #define ACT_SW 17
-
 
 //Creo los buffer de las entradas para almacenar el estado de todas las e8ntradas y trabajar de la misma forma que un plc
 int ESTADO = 0;
@@ -67,6 +69,7 @@ boolean CORTE_C_S = 0;
 boolean COAG_C_S = 0;
 
 boolean Z_ON_S = true;
+boolean MinDo_S = true;
 
 
 //Variables para el control DC
@@ -117,8 +120,8 @@ void READ_INPUTS_STATES_MACHINE(){
   //Z_ON_REQUEST(); //ESTÁ COMENTADO PORQUE ESTA DESHABILITADA LA FUNCION PARA AHORRAR TIEMPO DE EJECUCCIÓN
   COR_ON_S = digitalRead(COR_ON);
   COAG_ON_S = digitalRead(COAG_ON);
-//  CORTE_C_S = digitalRead(CORTE_C);
-//  COAG_C_S = digitalRead(COAG_C);
+  //  CORTE_C_S = digitalRead(CORTE_C);
+  //  COAG_C_S = digitalRead(COAG_C);
 }
 
 
@@ -127,6 +130,7 @@ void DEFINE_INPUTS_STATES_MACHINE(){
 
   pinMode(COR_ON, INPUT);
   pinMode(COAG_ON, INPUT);
+  pinMode(MinDo,INPUT_PULLUP);
 //  pinMode(CORTE_C, INPUT_PULLUP);
 //  pinMode(COAG_C, INPUT_PULLUP);
 }
@@ -166,7 +170,7 @@ void PLACA_RETORNO_REQUEST(){
   }
 
 void Z_ON_REQUEST(){
-  
+
 //Voy a omitir este paso descomentar y borrar ultima linea de la funcion para devolverme
 
 /*    int Valor_Z = Bio.impedance();
@@ -193,14 +197,20 @@ void TURN_ON_STATES_MACHINE(){
   switch (ESTADO) {
       case 0:
         //Serial.println("Estado 0");
+        cuenta=0;
         STANDBY();
+        MinDo_Check();
         ESTADO = MONITOREAR_PLACA;
-
         break;
 
       case 1:
         //Serial.println("Estado 1");
+        delay(50);
+   
         PLACA_RETORNO_REQUEST();
+        PLACA_RETORNO_REQUEST();
+        PLACA_RETORNO_REQUEST();
+        MinDo_Check();
         if(PLACA_RETORNO_S==1){
             ESTADO = ELECCION_MODO;
             PLACA_OK();
@@ -208,6 +218,7 @@ void TURN_ON_STATES_MACHINE(){
             //SIGO EN EL MISMO ESTADO;
             ALARMA_PLACA();
         }
+
         break;
 
       case 2:
@@ -231,13 +242,19 @@ void TURN_ON_STATES_MACHINE(){
         
       case 4:
         //Serial.println("Estado 4");
+        MinDo_Check();
         if(COR_ON_S==1){
             ESTADO = CORTAR;
         } else if(COAG_ON_S){
             ESTADO = COAGULAR;
-        } else {
-            //sigue en el mismo estado
-        } 
+        } else if(cuenta>=200){
+            ESTADO = MONITOREAR_PLACA;
+            cuenta=0;
+        } else{
+            //Sigue en el mismo estado
+            cuenta=cuenta+1;
+            Serial.println(cuenta);
+          }
       break;
 
       case 5:
@@ -246,7 +263,7 @@ void TURN_ON_STATES_MACHINE(){
         I2C_CONTROL_DC(1);
         I2C_TIPO_CORTE();  //Envio para forma de onda      
         CORTANDO();
-        delay(10000); //Borrar por favor, son solo para pruebas
+        delay(5000); //Borrar por favor, son solo para pruebas
         if(1){
             ESTADO = INICIO;
         } else {
@@ -260,7 +277,7 @@ void TURN_ON_STATES_MACHINE(){
         I2C_CONTROL_DC(2);
         I2C_TIPO_CORTE(); //Envio para forma de onda
         COAGULANDO();
-        delay(10000); //Borrar por favor, son solo para pruebas
+        delay(5000); //Borrar por favor, son solo para pruebas
         if(1){
             ESTADO = INICIO;
         } else {
@@ -386,7 +403,7 @@ void CORTANDO(){
   CAPTURA_POTENCIA_LCD(1);
   CAPTURA_MODO_CORTE();
   myNextion.setComponentValue("Cortando.n2",Voltaje_DC); //Solo de debugger
-  delay(10);
+  delay(50);
   digitalWrite(ACT_SW, LOW);
   
   //**Actualizar por cambio de pantalla a Cortando
@@ -398,16 +415,31 @@ void COAGULANDO(){
   CAPTURA_POTENCIA_LCD(2);
   CAPTURA_MODO_COAG();
   myNextion.setComponentValue("Coagulando.n2",Voltaje_DC); //Solo de debugger
-  delay(10);
+  delay(50);
   digitalWrite(ACT_SW, LOW);  
   //**Actualizar por cambio de pantalla a Coagulando
   }
 
 void STANDBY(){
   myNextion.sendCommand("page Home");
-  delay(10);
+  delay(50);
   digitalWrite(ACT_SW, HIGH);
   //**Actualizar por cambio de pantalla a Home
+  }
+  
+void MinDo_Check(){
+  
+  MinDo_S = digitalRead(MinDo);
+  
+  if(MinDo_S==0){
+      myNextion.setComponentValue("Home.bt6",1); //"1" Representa MinDo ON 
+    } else{
+      myNextion.setComponentValue("Home.bt6",0); //"0" Representa MinDo OFF
+        if(myNextion.getComponentValue("Home.bt2")==1){
+            myNextion.sendCommand("click bt1,1");
+          }
+      }
+      
   }
 
 

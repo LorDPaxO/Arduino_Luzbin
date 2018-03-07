@@ -24,8 +24,8 @@ void setup() {
   digitalWrite(selector,LOW);
   
   // MODIFICAR LA FRECUENCIA DEL PWM DEL PIN 9 (PIN DIGITAL 5 DE ARDUINO)
-  TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
-  //TCCR0B = _BV(CS01);            // Frecuencia de 3921 Hz para el pin PWM
+  //TCCR0B = _BV(CS00);             // Frecuencia de 31372 Hz para el pin PWM
+  TCCR0B = _BV(CS01);            // Frecuencia de 3921 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS01); // Frecuencia de 490 Hz para el pin PWM, Valor por defecto en el Microprocesador
   //TCCR0B = _BV(CS02);             // Frecuencia de 122 Hz para el pin PWM
   //TCCR0B = _BV(CS00) | _BV(CS02); // Frecuencia de 30 Hz para el pin PWM
@@ -86,33 +86,33 @@ void SELECCION_MUX(){
       break;
       
     case 2:    // Corte Mixto
-      analogWrite(PWM_pin,128);
+      analogWrite(PWM_pin,210);
       digitalWrite(selector,LOW); 
       break;
       
     case 3:    // Corte MinDo
-      analogWrite(PWM_pin,128);
+      analogWrite(PWM_pin,210);
       digitalWrite(selector,HIGH);
       break;
       
     case 4:    // Coag Alto
-      analogWrite(PWM_pin,38);
+      analogWrite(PWM_pin,180);
       digitalWrite(selector,LOW); 
       break;
       
     case 5:    // Coag Medio
-      analogWrite(PWM_pin,26);
+      analogWrite(PWM_pin,150);
       digitalWrite(selector,LOW); 
       break;
       
     case 6:    // Coag Bajo
-      analogWrite(PWM_pin,16);
+      analogWrite(PWM_pin,120);
       digitalWrite(selector,LOW); 
       break;
       
       default:{
         //Si llega un dato erroneo o no llega nada se pone corte Mixto.
-        analogWrite(PWM_pin,128);
+        analogWrite(PWM_pin,210);
         digitalWrite(selector,LOW);         
         }
   }
